@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 from app.database import engine, Base
 from app.config import settings
-from app.api import routes
+from app.api import routes, auth, inventory, prices
 import os
 
 # Create database tables
@@ -28,6 +28,9 @@ app.add_middleware(
 )
 
 # Include API routes
+app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
+app.include_router(inventory.router, prefix="/api/inventory", tags=["inventory"])
+app.include_router(prices.router, prefix="/api/prices", tags=["prices"])
 app.include_router(routes.router, prefix="/api", tags=["api"])
 
 # Serve frontend static files
