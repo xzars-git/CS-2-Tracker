@@ -6,9 +6,17 @@ from app.models import User
 from app.services.steam import SteamService
 from datetime import datetime
 import logging
+import secrets
+import string
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+
+def generate_unique_id(length=16):
+    """Generate a unique 16-character alphanumeric ID"""
+    alphabet = string.ascii_letters + string.digits  # a-z, A-Z, 0-9
+    return ''.join(secrets.choice(alphabet) for _ in range(length))
 
 
 @router.get("/login")
@@ -76,25 +84,27 @@ async def steam_callback(request: Request, db: Session = Depends(get_db)):
         user.steam_username = player_data.get("personaname", user.steam_username)
         user.avatar_url = player_data.get("avatarfull", user.avatar_url)
         user.updated_at = datetime.utcnow()
-        logger.info(f"Updated existing user: {user.steam_username} (ID: {user.id})")
+        logger.info(f"Updated existing user: {user.steam_username} (Unique ID: {user.unique_id})")
     else:
-        # Create new user
+        # Create new user with unique ID
+        unique_id = generate_unique_id(16)
         user = User(
+            unique_id=unique_id,
             steam_id=steam_id,
             steam_username=player_data.get("personaname", f"User_{steam_id[-6:]}"),
             avatar_url=player_data.get("avatarfull", ""),
         )
         db.add(user)
-        logger.info(f"Created new user: {user.steam_username}")
+        logger.info(f"Created new user: {user.steam_username} (Unique ID: {unique_id})")
     
     db.commit()
     db.refresh(user)
     
-    logger.info(f"User logged in successfully: {user.steam_username} (ID: {user.id})")
+    logger.info(f"User logged in successfully: {user.steam_username} (Unique ID: {user.unique_id})")
     
-    # Redirect to dashboard with user ID
+    # Redirect to dashboard with unique ID (NOT integer id)
     base_url = str(request.base_url).rstrip('/')
-    return RedirectResponse(url=f"{base_url}/?user_id={user.id}")
+    return RedirectResponse(url=f"{base_url}/?user_id={user.unique_id}")
 
 
 @router.get("/logout")
@@ -104,23 +114,33 @@ async def logout():
 
 
 @router.get("/user")
-async def get_current_user(user_id: int = Query(...), db: Session = Depends(get_db)):
+async def get_current_user(user_id: str = Query(...), db: Session = Depends(get_db)):
     """
     Get current user data
     
     Args:
-        user_id: User ID from session/query param
+        user_id: User unique ID (16-char alphanumeric)
         
     Returns:
         User object
     """
-    user = db.query(User).filter(User.id == user_id).first()
+    # Try to find by unique_id first, fallback to integer id for backwards compatibility
+    user = db.query(User).filter(User.unique_id == user_id).first()
+    
+    if not user:
+        # Try integer ID for old users
+        try:
+            int_id = int(user_id)
+            user = db.query(User).filter(User.id == int_id).first()
+        except ValueError:
+            pass
     
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
     return {
         "id": user.id,
+        "unique_id": user.unique_id,
         "steam_id": user.steam_id,
         "username": user.steam_username,
         "avatar_url": user.avatar_url,

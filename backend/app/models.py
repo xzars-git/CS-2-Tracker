@@ -9,6 +9,7 @@ class User(Base):
     __tablename__ = "users"
     
     id = Column(Integer, primary_key=True, index=True)
+    unique_id = Column(String(16), unique=True, nullable=False, index=True)  # 16-char alphanumeric
     steam_id = Column(String(17), unique=True, nullable=False, index=True)
     steam_username = Column(String(255))
     avatar_url = Column(String(500))
@@ -62,6 +63,7 @@ class Trade(Base):
     price = Column(Float)
     fee = Column(Float)
     net_amount = Column(Float)
+    source = Column(String(50), default="manual")  # "manual", "steam_market", "trade"
     timestamp = Column(DateTime, nullable=False, index=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     

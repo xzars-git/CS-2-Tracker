@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "CS2 Tracker - Auto Import",
+  "version": "1.0",
+  "description": "Auto-import Steam Market history to CS2 Trading Tracker",
+  "permissions": [
+    "cookies",
+    "activeTab",
+    "storage"
+  ],
+  "host_permissions": [
+    "https://steamcommunity.com/*",
+    "http://localhost:8000/*"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  }
+}

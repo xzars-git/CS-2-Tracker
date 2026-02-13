@@ -4,15 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CS2 Trading Tracker</title>
-
-    <!-- Tailwind CSS -->
+    <title>CS2 Trading Tracker - P&L Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-
-    <!-- Axios -->
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
 
@@ -23,32 +17,23 @@
             <div class="flex justify-between items-center">
                 <div>
                     <h1 class="text-2xl font-bold text-blue-400">CS2 Trading Tracker</h1>
-                    <p class="text-sm text-gray-400">Track your inventory & P&L in real-time</p>
+                    <p class="text-sm text-gray-400">Track transactions & calculate P&L</p>
                 </div>
                 <div class="flex space-x-3 items-center">
                     <template x-if="!user">
                         <a href="/api/auth/login"
-                            class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded transition flex items-center space-x-2">
-                            <span>🎮</span>
-                            <span>Login with Steam</span>
+                            class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded transition">
+                            🎮 Login with Steam
                         </a>
                     </template>
-
                     <template x-if="user">
                         <div class="flex items-center space-x-4">
                             <div class="flex items-center space-x-2">
                                 <img :src="user.avatar_url" class="w-10 h-10 rounded-full" :alt="user.username">
                                 <span class="text-white font-semibold" x-text="user.username"></span>
                             </div>
-                            <button @click="syncInventory()" :disabled="syncing"
-                                class="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white px-4 py-2 rounded transition">
-                                <span x-show="!syncing">🔄 Sync</span>
-                                <span x-show="syncing">⏳ Syncing...</span>
-                            </button>
                             <a href="/api/auth/logout"
-                                class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition">
-                                Logout
-                            </a>
+                                class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition">Logout</a>
                         </div>
                     </template>
                 </div>
@@ -58,109 +43,195 @@
 
     <!-- Main Content -->
     <main class="container mx-auto px-4 py-8">
-        <!-- Welcome Section (Before Login) -->
-        <div x-show="!user" class="bg-gray-800 rounded-lg p-8 mb-8 border border-gray-700">
-            <h2 class="text-3xl font-bold mb-4 text-blue-400">🎮 Welcome to CS2 Trading Tracker!</h2>
-            <p class="text-gray-300 mb-6">
-                Track your CS2 inventory value and trading profit/loss in real-time, completely FREE!
-            </p>
-
-            <div class="bg-gray-700 p-6 rounded-lg mb-6">
-                <h3 class="text-xl font-bold mb-3 text-blue-400">Features:</h3>
-                <ul class="space-y-2 text-gray-300">
-                    <li>✅ Real-time inventory tracking with CSFloat prices</li>
-                    <li>✅ Automatic P&L calculation (FIFO + unique token matching)</li>
-                    <li>✅ Portfolio value charts over time</li>
-                    <li>✅ Multi-account support</li>
-                    <li>✅ 100% FREE - No paid APIs required</li>
-                </ul>
-            </div>
-
+        <!-- Welcome Section -->
+        <div x-show="!user" class="bg-gray-800 rounded-lg p-8 border border-gray-700">
+            <h2 class="text-3xl font-bold mb-4 text-blue-400">Welcome to CS2 P&L Tracker!</h2>
+            <p class="text-gray-300 mb-4">Track your CS2 trading profit & loss with manual transaction entry.</p>
             <a href="/api/auth/login"
-                class="inline-block bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-lg transition text-lg font-semibold">
-                🎮 Login with Steam to Get Started
+                class="inline-block bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg">
+                🎮 Login with Steam to Start
             </a>
         </div>
 
-        <!-- Dashboard (After Login) -->
+        <!-- Dashboard -->
         <div x-show="user">
-            <!-- Stats Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <!-- P&L Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
                 <div class="bg-gray-800 p-6 rounded-lg border border-gray-700">
-                    <h3 class="text-gray-400 text-sm mb-1">Total Items</h3>
-                    <p class="text-3xl font-bold text-blue-400" x-text="inventory.length || 0"></p>
+                    <h3 class="text-gray-400 text-sm mb-1">Total Bought</h3>
+                    <p class="text-2xl font-bold text-red-400" x-text="'$' + pnlStats.total_bought.toFixed(2)"></p>
                 </div>
-
                 <div class="bg-gray-800 p-6 rounded-lg border border-gray-700">
-                    <h3 class="text-gray-400 text-sm mb-1">Total Value</h3>
-                    <p class="text-3xl font-bold text-green-400" x-text="'$' + totalValue.toFixed(2)"></p>
+                    <h3 class="text-gray-400 text-sm mb-1">Total Sold</h3>
+                    <p class="text-2xl font-bold text-green-400" x-text="'$' + pnlStats.total_sold.toFixed(2)"></p>
                 </div>
-
                 <div class="bg-gray-800 p-6 rounded-lg border border-gray-700">
-                    <h3 class="text-gray-400 text-sm mb-1">P&L</h3>
-                    <p class="text-3xl font-bold text-yellow-400">$0.00</p>
-                    <p class="text-xs text-gray-500">Coming soon</p>
+                    <h3 class="text-gray-400 text-sm mb-1">Net P&L</h3>
+                    <p class="text-2xl font-bold" :class="pnlStats.net_profit >= 0 ? 'text-green-400' : 'text-red-400'"
+                        x-text="'$' + pnlStats.net_profit.toFixed(2)"></p>
+                </div>
+                <div class="bg-gray-800 p-6 rounded-lg border border-gray-700">
+                    <h3 class="text-gray-400 text-sm mb-1">Transactions</h3>
+                    <p class="text-2xl font-bold text-blue-400" x-text="pnlStats.transaction_count"></p>
                 </div>
             </div>
 
-            <!-- Inventory Table -->
-            <div class="bg-gray-800 rounded-lg p-6 border border-gray-700">
+            <!-- Auto-Import Section -->
+            <div class="bg-gradient-to-r from-purple-900 to-blue-900 rounded-lg p-6 border border-purple-500 mb-8">
                 <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-2xl font-bold text-blue-400">Your Inventory</h2>
-                    <div class="flex space-x-2">
-                        <button @click="updatePrices()" :disabled="syncing || inventory.length === 0"
-                            class="bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-600 text-white px-4 py-2 rounded transition text-sm">
-                            <span x-show="!syncing">💰 Update Prices</span>
-                            <span x-show="syncing">⏳ Updating...</span>
-                        </button>
-                        <button @click="syncInventory()" :disabled="syncing"
-                            class="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white px-4 py-2 rounded transition text-sm">
-                            <span x-show="!syncing">🔄 Refresh</span>
-                            <span x-show="syncing">⏳ Loading...</span>
-                        </button>
+                    <div>
+                        <h2 class="text-2xl font-bold text-white mb-2">🚀 Auto-Import from Steam Market</h2>
+                        <p class="text-gray-300 text-sm">Import all your Steam Market transactions automatically with
+                            cookies</p>
                     </div>
-                </div>
-
-                <!-- Loading State -->
-                <div x-show="loading" class="text-center py-12">
-                    <p class="text-gray-400 text-lg">⏳ Loading inventory...</p>
-                </div>
-
-                <!-- Empty State -->
-                <div x-show="!loading && inventory.length === 0" class="text-center py-12">
-                    <p class="text-gray-400 text-lg mb-4">No items found in your inventory</p>
-                    <button @click="syncInventory()"
-                        class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded transition">
-                        🔄 Sync from Steam
+                    <button @click="showImportGuide = !showImportGuide"
+                        class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded text-sm">
+                        <span x-show="!showImportGuide">📖 Show Guide</span>
+                        <span x-show="showImportGuide">🔼 Hide Guide</span>
                     </button>
                 </div>
 
-                <!-- Inventory List -->
-                <div x-show="!loading && inventory.length > 0" class="space-y-2">
-                    <template x-for="item in inventory.slice(0, 50)" :key="item.asset_id">
-                        <div
-                            class="flex items-center justify-between py-3 px-4 bg-gray-700 rounded-lg hover:bg-gray-650 transition">
-                            <div class="flex items-center space-x-4 flex-1">
-                                <img :src="'https://community.cloudflare.steamstatic.com/economy/image/' + item.icon_url"
-                                    class="w-16 h-16 bg-gray-600 rounded" :alt="item.name"
-                                    onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2264%22 height=%2264%22><rect fill=%22%23374151%22 width=%22100%%22 height=%22100%%22/></svg>'">
+                <!-- Cookie Guide -->
+                <div x-show="showImportGuide" class="bg-gray-800 rounded-lg p-4 mb-4">
+                    <h3 class="font-bold text-yellow-400 mb-3">📖 How to Get Steam Cookies:</h3>
+                    <ol class="space-y-2 text-sm text-gray-300">
+                        <li><strong>1.</strong> Open <a href="https://steamcommunity.com/market/" target="_blank"
+                                class="text-blue-400 underline">Steam Market</a> in your browser (make sure you're
+                            logged in)</li>
+                        <li><strong>2.</strong> Press <kbd class="bg-gray-700 px-2 py-1 rounded">F12</kbd> to open
+                            DevTools</li>
+                        <li><strong>3.</strong> Go to <strong>Application</strong> tab (Chrome) or
+                            <strong>Storage</strong> tab (Firefox)
+                        </li>
+                        <li><strong>4.</strong> Click <strong>Cookies</strong> →
+                            <strong>https://steamcommunity.com</strong>
+                        </li>
+                        <li><strong>5.</strong> Find and copy these cookies:
+                            <ul class="ml-6 mt-1 space-y-1">
+                                <li>• <code class="bg-gray-700 px-1">sessionid</code></li>
+                                <li>• <code class="bg-gray-700 px-1">steamLoginSecure</code></li>
+                                <li>• <code class="bg-gray-700 px-1">steamCountry</code> (optional)</li>
+                            </ul>
+                        </li>
+                        <li><strong>6.</strong> Format as: <code
+                                class="bg-gray-700 px-2 text-xs">sessionid=abc123; steamLoginSecure=xyz789; steamCountry=US</code>
+                        </li>
+                        <li><strong>7.</strong> Paste into the box below and click Import!</li>
+                    </ol>
+                    <p class="text-yellow-400 text-xs mt-3">⚠️ <strong>Security Note:</strong> Cookies are like your
+                        password. We use them ONLY to fetch YOUR transaction history and DO NOT store them!</p>
+                </div>
+
+                <!-- Import Form -->
+                <form @submit.prevent="importMarketHistory()" class="space-y-3">
+                    <div>
+                        <label class="block text-sm font-medium mb-1 text-white">Steam Cookies:</label>
+                        <textarea x-model="steamCookies" required rows="3"
+                            class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded focus:border-purple-500 text-white font-mono text-xs"
+                            placeholder="sessionid=abc123...; steamLoginSecure=xyz789...; steamCountry=US"></textarea>
+                    </div>
+                    <div class="flex space-x-3">
+                        <button type="submit" :disabled="importing"
+                            class="flex-1 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 text-white py-3 rounded transition font-semibold">
+                            <span x-show="!importing">🚀 Import Market History</span>
+                            <span x-show="importing">⏳ Importing...</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Transaction Form & List Container -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                <!-- Add Transaction Form -->
+                <div class="lg:col-span-1 bg-gray-800 rounded-lg p-6 border border-gray-700">
+                    <h2 class="text-xl font-bold text-blue-400 mb-4">➕ Add Transaction</h2>
+                    <form @submit.prevent="addTransaction()" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Item Name</label>
+                            <input type="text" x-model="newTransaction.item_name" required
+                                class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded focus:border-blue-500 text-white"
+                                placeholder="AK-47 | Redline">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Type</label>
+                            <select x-model="newTransaction.trade_type" required
+                                class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded focus:border-blue-500 text-white">
+                                <option value="BUY">🛒 Buy</option>
+                                <option value="SELL">💰 Sell</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Price (USD)</label>
+                            <input type="number" step="0.01" x-model="newTransaction.price" required
+                                class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded focus:border-blue-500 text-white"
+                                placeholder="25.50">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Fee (USD)</label>
+                            <input type="number" step="0.01" x-model="newTransaction.fee"
+                                class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded focus:border-blue-500 text-white"
+                                placeholder="0.00">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Date & Time</label>
+                            <input type="datetime-local" x-model="newTransaction.timestamp" required
+                                class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded focus:border-blue-500 text-white">
+                        </div>
+
+                        <button type="submit"
+                            class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded transition font-semibold">
+                            ➕ Add Transaction
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Transaction List -->
+                <div class="lg:col-span-2 bg-gray-800 rounded-lg p-6 border border-gray-700">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold text-blue-400">📋 Recent Transactions</h2>
+                        <button @click="fetchTransactions()"
+                            class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded text-sm">
+                            🔄 Refresh
+                        </button>
+                    </div>
+
+                    <!-- Loading -->
+                    <div x-show="loading" class="text-center py-8 text-gray-400">Loading...</div>
+
+                    <!-- Empty State -->
+                    <div x-show="!loading && transactions.length === 0" class="text-center py-8 text-gray-400">
+                        No transactions yet. Add one to get started!
+                    </div>
+
+                    <!-- Transaction List -->
+                    <div x-show="!loading && transactions.length > 0" class="space-y-2 max-h-[600px] overflow-y-auto">
+                        <template x-for="tx in transactions" :key="tx.id">
+                            <div class="flex items-center justify-between p-4 bg-gray-700 rounded-lg hover:bg-gray-650">
                                 <div class="flex-1">
-                                    <p class="font-semibold text-white" x-text="item.name"></p>
-                                    <div class="flex space-x-3 text-sm text-gray-400">
-                                        <span x-show="item.category" x-text="item.category"></span>
-                                        <span x-show="item.rarity" class="text-blue-400" x-text="item.rarity"></span>
+                                    <p class="font-semibold" x-text="tx.item_name"></p>
+                                    <p class="text-sm text-gray-400" x-text="new Date(tx.timestamp).toLocaleString()">
+                                    </p>
+                                </div>
+                                <div class="flex items-center space-x-4">
+                                    <div class="text-right">
+                                        <span :class="tx.trade_type === 'BUY' ? 'bg-red-600' : 'bg-green-600'"
+                                            class="px-3 py-1 rounded text-xs font-semibold"
+                                            x-text="tx.trade_type"></span>
+                                        <p class="mt-1 font-bold"
+                                            :class="tx.trade_type === 'BUY' ? 'text-red-400' : 'text-green-400'"
+                                            x-text="'$' + tx.price.toFixed(2)"></p>
                                     </div>
+                                    <button @click="deleteTransaction(tx.id)"
+                                        class="text-red-400 hover:text-red-300 text-sm px-2">
+                                        🗑️
+                                    </button>
                                 </div>
                             </div>
-                            <div class="text-right">
-                                <p class="text-lg font-bold text-green-400"
-                                    x-text="item.current_price ? '$' + item.current_price.toFixed(2) : 'N/A'"></p>
-                            </div>
-                        </div>
-                    </template>
-
-                    <div x-show="inventory.length > 50" class="text-center py-4 text-gray-400">
-                        ... and <span x-text="inventory.length - 50"></span> more items
+                        </template>
                     </div>
                 </div>
             </div>
@@ -169,29 +240,49 @@
 
     <!-- Footer -->
     <footer class="container mx-auto px-4 py-8 text-center text-gray-500">
-        <p>CS2 Trading Tracker v1.0.0 | Built with FastAPI + Alpine.js</p>
-        <p class="text-sm mt-2">
-            <a href="/docs" target="_blank" class="text-blue-400 hover:underline">API Docs</a>
-        </p>
+        <p>CS2 Trading Tracker v2.0 | Transaction-Based P&L</p>
+        <p class="text-sm mt-2"><a href="/docs" target="_blank" class="text-blue-400 hover:underline">API Docs</a></p>
     </footer>
 
     <script>
         function appData() {
             return {
                 user: null,
-                inventory: [],
-                totalValue: 0,
+                transactions: [],
+                pnlStats: {
+                    total_bought: 0,
+                    total_sold: 0,
+                    net_profit: 0,
+                    transaction_count: 0
+                },
+                newTransaction: {
+                    item_name: '',
+                    trade_type: 'BUY',
+                    price: 0,
+                    fee: 0,
+                    timestamp: new Date().toISOString().slice(0, 16)
+                },
                 loading: false,
-                syncing: false,
+                importing: false,
+                showImportGuide: false,
+                steamCookies: '',
 
                 async init() {
-                    // Check if user_id in URL
                     const urlParams = new URLSearchParams(window.location.search);
                     const userId = urlParams.get('user_id');
 
                     if (userId) {
                         await this.fetchUser(userId);
-                        await this.fetchInventory(userId);
+                        await this.fetchTransactions();
+                        await this.fetchPnL();
+
+                        // Auto-fetch with saved cookies (if available)
+                        const savedCookies = localStorage.getItem('steam_cookies');
+                        if (savedCookies && savedCookies.length > 20) {
+                            this.steamCookies = savedCookies;
+                            // Auto-import on load (silently)
+                            await this.autoImportMarketHistory();
+                        }
                     }
                 },
 
@@ -199,63 +290,148 @@
                     try {
                         const response = await axios.get(`/api/auth/user?user_id=${userId}`);
                         this.user = response.data;
-                        // Store user ID in localStorage
-                        localStorage.setItem('user_id', userId);
                     } catch (error) {
                         console.error('Error fetching user:', error);
                     }
                 },
 
-                async fetchInventory(userId) {
+                async fetchTransactions() {
+                    if (!this.user) return;
+
                     this.loading = true;
                     try {
-                        const response = await axios.get(`/api/inventory/?user_id=${userId || this.user.id}`);
-                        this.inventory = response.data.items || [];
-                        this.totalValue = response.data.total_value || 0;
+                        const response = await axios.get(`/api/transactions/?user_id=${this.user.id}&limit=100`);
+                        this.transactions = response.data;
                     } catch (error) {
-                        console.error('Error fetching inventory:', error);
+                        console.error('Error fetching transactions:', error);
                     } finally {
                         this.loading = false;
                     }
                 },
 
-                async syncInventory() {
+                async fetchPnL() {
                     if (!this.user) return;
 
-                    this.syncing = true;
                     try {
-                        const response = await axios.post(`/api/inventory/sync?user_id=${this.user.id}`);
-                        console.log('Sync started:', response.data);
-
-                        // Wait a bit then refresh
-                        setTimeout(async () => {
-                            await this.fetchInventory(this.user.id);
-                            this.syncing = false;
-                        }, 5000);  // Increased to 5 seconds for price fetching
+                        const response = await axios.get(`/api/transactions/pnl?user_id=${this.user.id}`);
+                        this.pnlStats = response.data;
                     } catch (error) {
-                        console.error('Error syncing inventory:', error);
-                        alert('Failed to sync inventory. Please make sure your Steam inventory is public.');
-                        this.syncing = false;
+                        console.error('Error fetching P&L:', error);
                     }
                 },
 
-                async updatePrices() {
+                async addTransaction() {
                     if (!this.user) return;
 
-                    this.syncing = true;
                     try {
-                        const response = await axios.post(`/api/prices/update?user_id=${this.user.id}`);
-                        console.log('Price update:', response.data);
+                        await axios.post(
+                            `/api/transactions/?user_id=${this.user.id}`,
+                            this.newTransaction
+                        );
 
-                        // Refresh inventory
-                        await this.fetchInventory(this.user.id);
-                        this.syncing = false;
+                        // Reset form
+                        this.newTransaction = {
+                            item_name: '',
+                            trade_type: 'BUY',
+                            price: 0,
+                            fee: 0,
+                            timestamp: new Date().toISOString().slice(0, 16)
+                        };
 
-                        alert(`Updated prices for ${response.data.updated} items!`);
+                        // Refresh data
+                        await this.fetchTransactions();
+                        await this.fetchPnL();
+
+                        alert('✅ Transaction added successfully!');
                     } catch (error) {
-                        console.error('Error updating prices:', error);
-                        alert('Failed to update prices.');
-                        this.syncing = false;
+                        console.error('Error adding transaction:', error);
+                        alert('❌ Failed to add transaction');
+                    }
+                },
+
+                async deleteTransaction(id) {
+                    if (!confirm('Delete this transaction?')) return;
+
+                    try {
+                        await axios.delete(`/api/transactions/${id}?user_id=${this.user.id}`);
+                        await this.fetchTransactions();
+                        await this.fetchPnL();
+                    } catch (error) {
+                        console.error('Error deleting transaction:', error);
+                    }
+                },
+
+                async importMarketHistory() {
+                    if (!this.user) return;
+                    if (!this.steamCookies || this.steamCookies.length < 20) {
+                        alert('⚠️ Please enter valid Steam cookies');
+                        return;
+                    }
+
+                    this.importing = true;
+                    try {
+                        const response = await axios.post(
+                            `/api/import/steam-market?user_id=${this.user.id}`,
+                            {
+                                cookies: this.steamCookies,
+                                count: 500
+                            }
+                        );
+
+                        const result = response.data;
+
+                        // Save cookies to localStorage for auto-import
+                        localStorage.setItem('steam_cookies', this.steamCookies);
+
+                        // Show success message
+                        alert(`🎉 Import Complete!\n\nImported: ${result.imported} new transactions\nSkipped (duplicates): ${result.skipped}\nTotal found: ${result.total}\n\n✅ Cookies saved - will auto-import on next visit!`);
+
+                        // Clear cookies input
+                        this.steamCookies = '';
+                        this.showImportGuide = false;
+
+                        // Refresh data
+                        await this.fetchTransactions();
+                        await this.fetchPnL();
+
+                    } catch (error) {
+                        console.error('Error importing market history:', error);
+                        const errorMsg = error.response?.data?.detail || 'Failed to import. Check your cookies and try again.';
+                        alert(`❌ Import Failed\n\n${errorMsg}`);
+                    } finally {
+                        this.importing = false;
+                    }
+                },
+
+                async autoImportMarketHistory() {
+                    // Silent auto-import on page load
+                    if (!this.user || !this.steamCookies) return;
+
+                    try {
+                        const response = await axios.post(
+                            `/api/import/steam-market?user_id=${this.user.id}`,
+                            {
+                                cookies: this.steamCookies,
+                                count: 100  // Limit to 100 for auto-fetch
+                            }
+                        );
+
+                        const result = response.data;
+
+                        // Only show notification if new transactions were imported
+                        if (result.imported > 0) {
+                            console.log(`Auto-imported ${result.imported} new transactions`);
+                            // Optionally show a subtle notification
+                            // You could add a toast notification here
+                        }
+
+                        // Refresh data
+                        await this.fetchTransactions();
+                        await this.fetchPnL();
+
+                    } catch (error) {
+                        // Silent fail for auto-import
+                        console.log('Auto-import skipped:', error.message);
                     }
                 }
             }

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            width: 350px;
+            padding: 15px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        h2 {
+            margin: 0 0 15px 0;
+            font-size: 18px;
+            text-align: center;
+        }
+
+        .status {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .info {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .success {
+            background: rgba(34, 197, 94, 0.3);
+        }
+
+        .error {
+            background: rgba(239, 68, 68, 0.3);
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 13px;
+        }
+
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2>🚀 CS2 Tracker Auto-Import</h2>
+
+        <div class="status" id="status">
+            Ready to import!
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label>Your User ID:</label>
+            <input type="number" id="userId" placeholder="Enter your user ID from the app" />
+        </div>
+
+        <button id="importBtn">
+            📥 Auto-Import Market History
+        </button>
+
+        <div class="info">
+            <strong>How it works:</strong><br>
+            1. Open Steam Market in a tab<br>
+            2. Enter your User ID from CS2 Tracker<br>
+            3. Click the button above<br>
+            4. Extension auto-extracts cookies & imports!
+        </div>
+
+        <div class="info" style="margin-top: 10px; font-size: 11px;">
+            ⚠️ Make sure CS2 Tracker app is running on localhost:8000
+        </div>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+
+</html>
