@@ -1,7 +1,6 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models import Item
 from app.services.price import PriceService
 import logging
 
@@ -9,9 +8,11 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-@router.post("/update")
-async def update_prices(
-    user_id: int = Query(..., description="User ID"),
+# Removed /update endpoint - inventory system deprecated
+
+@router.get("/item/{item_name}")
+async def get_item_price(
+    item_name: str,
     db: Session = Depends(get_db)
 ):
     """

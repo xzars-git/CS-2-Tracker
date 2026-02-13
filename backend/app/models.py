@@ -16,38 +16,8 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Relationships
-    items = relationship("Item", back_populates="user", cascade="all, delete-orphan")
+    # Relationships (Transaction-based system only)
     trades = relationship("Trade", back_populates="user", cascade="all, delete-orphan")
-    snapshots = relationship("InventorySnapshot", back_populates="user", cascade="all, delete-orphan")
-
-
-class Item(Base):
-    """Inventory item model"""
-    __tablename__ = "items"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    asset_id = Column(String(255), unique=True, nullable=False, index=True)
-    name = Column(String(255), nullable=False, index=True)
-    category = Column(String(50))
-    rarity = Column(String(50))
-    float_value = Column(Float)
-    pattern_index = Column(Integer)
-    stickers = Column(JSON)
-    inspect_link = Column(Text)
-    icon_url = Column(Text)
-    current_price = Column(Float)
-    acquired_at = Column(DateTime)
-    acquired_price = Column(Float)
-    sold_at = Column(DateTime)
-    sold_price = Column(Float)
-    pnl = Column(Float)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    # Relationships
-    user = relationship("User", back_populates="items")
 
 
 class Trade(Base):
@@ -71,26 +41,14 @@ class Trade(Base):
     user = relationship("User", back_populates="trades")
 
 
-class InventorySnapshot(Base):
-    """Daily inventory value snapshots"""
-    __tablename__ = "inventory_snapshots"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    total_value = Column(Float, nullable=False)
-    total_items = Column(Integer, nullable=False)
-    snapshot_date = Column(Date, nullable=False, index=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    
-    # Relationships
-    user = relationship("User", back_populates="snapshots")
-
-
 class PriceCache(Base):
-    """Cache for item prices from CSFloat"""
+    """Price cache model for CSFloat/Steam prices"""
     __tablename__ = "price_cache"
     
     id = Column(Integer, primary_key=True, index=True)
     item_name = Column(String(255), unique=True, nullable=False, index=True)
-    price = Column(Float, nullable=False)
+    price = Column(Float)
+    source = Column(String(50))  # "csfloat" or "steam"
+    currency = Column(String(10), default="USD")
     cached_at = Column(DateTime, default=datetime.utcnow, index=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

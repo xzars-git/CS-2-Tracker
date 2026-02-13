@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 from app.database import engine, Base
 from app.config import settings
-from app.api import routes, auth, inventory, prices, transactions, import_history, marketplace
+from app.api import auth, prices, transactions, import_history, test_runner
 import os
 
 # Create database tables
@@ -13,7 +13,7 @@ Base.metadata.create_all(bind=engine)
 # Initialize FastAPI app
 app = FastAPI(
     title=settings.app_name,
-    description="Track your CS2 inventory and P&L with real-time prices",
+    description="Track your CS2 P&L with transaction-based tracking",
     version="1.0.0",
     debug=settings.debug
 )
@@ -27,14 +27,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include API routes
+# Include API routes (CORE ONLY)
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
-app.include_router(inventory.router, prefix="/api/inventory", tags=["inventory"])
-app.include_router(prices.router, prefix="/api/prices", tags=["prices"])
 app.include_router(transactions.router, prefix="/api/transactions", tags=["transactions"])
 app.include_router(import_history.router, prefix="/api/import", tags=["import"])
-app.include_router(marketplace.router, prefix="/api/marketplace", tags=["marketplace"])
-app.include_router(routes.router, prefix="/api", tags=["api"])
+app.include_router(prices.router, prefix="/api/prices", tags=["prices"])
+app.include_router(test_runner.router, prefix="/api/test", tags=["testing"])
+
 
 # Serve frontend static files
 frontend_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "frontend")
