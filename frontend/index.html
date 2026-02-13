@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS2 Trading Tracker</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body class="bg-gray-900 text-white" x-data="appData()">
+    <!-- Header -->
+    <header class="bg-gray-800 shadow-lg">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-bold text-blue-400">CS2 Trading Tracker</h1>
+                    <p class="text-sm text-gray-400">Track your inventory & P&L in real-time</p>
+                </div>
+                <div class="flex space-x-3">
+                    <button @click="testAPI()" 
+                            class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded transition">
+                        Test API
+                    </button>
+                    <a href="/docs" target="_blank"
+                       class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition inline-block">
+                        API Docs
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <!-- Welcome Section -->
+        <div class="bg-gray-800 rounded-lg p-8 mb-8 border border-gray-700">
+            <h2 class="text-3xl font-bold mb-4 text-blue-400">🎮 Welcome!</h2>
+            <p class="text-gray-300 mb-6">
+                Your CS2 Trading Tracker is up and running! The backend API is ready to receive requests.
+            </p>
+            
+            <!-- Status Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-gray-700 p-4 rounded-lg">
+                    <div class="text-sm text-gray-400 mb-1">Backend Status</div>
+                    <div class="text-xl font-bold" :class="apiStatus === 'ok' ? 'text-green-400' : 'text-red-400'">
+                        <span x-text="apiStatus === 'ok' ? '✓ Running' : '✗ Offline'"></span>
+                    </div>
+                </div>
+                
+                <div class="bg-gray-700 p-4 rounded-lg">
+                    <div class="text-sm text-gray-400 mb-1">Database</div>
+                    <div class="text-xl font-bold text-blue-400">SQLite</div>
+                </div>
+                
+                <div class="bg-gray-700 p-4 rounded-lg">
+                    <div class="text-sm text-gray-400 mb-1">Users Registered</div>
+                    <div class="text-xl font-bold text-yellow-400" x-text="totalUsers"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Next Steps -->
+        <div class="bg-gray-800 rounded-lg p-8 border border-gray-700">
+            <h3 class="text-2xl font-bold mb-4 text-blue-400">📋 Next Steps</h3>
+            <div class="space-y-4">
+                <div class="flex items-start space-x-3">
+                    <span class="text-2xl">1️⃣</span>
+                    <div>
+                        <div class="font-semibold text-lg">Setup Environment Variables</div>
+                        <p class="text-gray-400">Copy <code class="bg-gray-700 px-2 py-1 rounded">.env.example</code> to <code class="bg-gray-700 px-2 py-1 rounded">.env</code> and add your Steam API key</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-start space-x-3">
+                    <span class="text-2xl">2️⃣</span>
+                    <div>
+                        <div class="font-semibold text-lg">Initialize Database</div>
+                        <p class="text-gray-400">Run migrations with Alembic to create database tables</p>
+                        <code class="block bg-gray-700 px-3 py-2 rounded mt-2 text-sm">alembic upgrade head</code>
+                    </div>
+                </div>
+                
+                <div class="flex items-start space-x-3">
+                    <span class="text-2xl">3️⃣</span>
+                    <div>
+                        <div class="font-semibold text-lg">Implement Steam OAuth</div>
+                        <p class="text-gray-400">Add Steam login integration to start tracking your inventory</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Response Display -->
+        <div x-show="apiResponse" class="mt-8 bg-gray-800 rounded-lg p-6 border border-gray-700">
+            <h3 class="text-xl font-bold mb-3 text-blue-400">API Response</h3>
+            <pre class="bg-gray-900 p-4 rounded overflow-x-auto text-sm" x-text="JSON.stringify(apiResponse, null, 2)"></pre>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="container mx-auto px-4 py-8 text-center text-gray-500">
+        <p>CS2 Trading Tracker v1.0.0 | Built with FastAPI + Alpine.js</p>
+    </footer>
+
+    <script>
+        function appData() {
+            return {
+                apiStatus: 'checking',
+                totalUsers: 0,
+                apiResponse: null,
+                
+                async init() {
+                    await this.checkAPI();
+                    await this.fetchUsers();
+                },
+                
+                async checkAPI() {
+                    try {
+                        const response = await axios.get('/api/health');
+                        this.apiStatus = response.data.status;
+                    } catch (error) {
+                        this.apiStatus = 'error';
+                        console.error('API health check failed:', error);
+                    }
+                },
+                
+                async fetchUsers() {
+                    try {
+                        const response = await axios.get('/api/users');
+                        this.totalUsers = response.data.length;
+                    } catch (error) {
+                        console.error('Failed to fetch users:', error);
+                    }
+                },
+                
+                async testAPI() {
+                    try {
+                        const response = await axios.get('/api/health');
+                        this.apiResponse = response.data;
+                    } catch (error) {
+                        this.apiResponse = { error: error.message };
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>
