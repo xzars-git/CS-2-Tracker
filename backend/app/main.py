@@ -41,6 +41,16 @@ if os.path.exists(frontend_path):
     app.mount("/static", StaticFiles(directory=frontend_path), name="static")
 
 
+@app.get("/tests", response_class=HTMLResponse)
+async def tests_page():
+    """Serve system diagnostics page"""
+    tests_path = os.path.join(frontend_path, "tests.html")
+    if os.path.exists(tests_path):
+        with open(tests_path, "r", encoding="utf-8") as f:
+            return f.read()
+    return "Tests page not found"
+
+
 @app.get("/", response_class=HTMLResponse)
 async def root():
     """Serve frontend homepage"""
